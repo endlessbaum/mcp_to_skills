@@ -1,15 +1,15 @@
 # ⚠️ EXPERIMENTAL — 実験段階のソフトウェアです
 
 > **このプロジェクトは現在、評価・検証を目的とした実験版です。**  
-> CLI、設定形式、Sessionの挙動、Skillの配置方法は、予告なく変更される可能性があります。
+> コマンド形式、設定形式、Sessionの挙動、Skillの配置方法は、予告なく変更される可能性があります。
 > 重要な環境や本番用途では使用せず、MCPプロセスが正常に終了していることを確認してください。
 
 # mcp-to-skills
 
-`mcp-to-skills` moves the lifetime of a stdio MCP server behind a short-lived
-CLI and a local session broker. The broker exists only while it owns an active
-MCP session, so the server does not need to be registered with Codex or ChatGPT
-Desktop and does not remain permanently active.
+`mcp-to-skills` moves the lifetime of a stdio MCP server behind a project-local
+command and a local session broker. The broker exists only while it owns an
+active MCP session, so the server does not need to be registered with Codex or
+ChatGPT Desktop and does not remain permanently active.
 
 This repository currently contains the first Session Mode evaluation build.
 
@@ -17,46 +17,39 @@ To make a server callable as an actual project-scoped Codex Skill, follow
 [the Codex project Skill placement guide](docs/CODEX_SKILLS.md). A complete
 Blender example is available under `examples/blender-project/.agents/skills`.
 
-## Install with uv
+## Add to a project with uv
 
-Install the CLI into a persistent, isolated uv tool environment:
-
-```powershell
-cd D:\mcp_to_skills
-uv tool install .
-mcp-to-skills --version
-```
-
-If an older local build is already installed, refresh it with
-`uv tool install --reinstall .`.
-
-If uv warns that its executable directory is not on `PATH`, run `uv tool
-update-shell`, then restart the terminal and Codex. Do not use `uvx` as the
-normal Session Mode entry point: its environment is intended for ephemeral
-execution, while a detached Session Broker must keep using a persistent Python
-environment.
-
-For development, either install the tool as editable:
+Run the following from the root of each project that will use an MCP Skill. If
+the project does not have a `pyproject.toml` yet, create a minimal one first:
 
 ```powershell
-uv tool install --editable .
+cd C:\path\to\your-project
+uv init --bare  # Skip this line when pyproject.toml already exists
+uv add --dev "mcp-to-skills @ git+https://github.com/endlessbaum/mcp_to_skills.git"
+uv run mcp-to-skills --version
 ```
 
-or use the project environment:
+This records `mcp-to-skills` as a project development dependency, updates
+`uv.lock`, and installs it into the project's persistent `.venv`. Nothing is
+added to the global `PATH`; run every command through `uv run`.
+
+To update the Git dependency later:
+
+```powershell
+uv lock --upgrade-package mcp-to-skills
+uv sync
+```
+
+Pinning a release, branch, or revision is also supported by uv's Git dependency
+options. Private repositories require Git credentials that can already access
+the repository.
+
+For development of `mcp-to-skills` itself, use its repository environment:
 
 ```powershell
 uv sync
 uv run mcp-to-skills session list
 ```
-
-Install directly from a public GitHub repository in the same way:
-
-```powershell
-uv tool install "git+https://github.com/endlessbaum/mcp_to_skills.git"
-```
-
-For a tag or branch, append `@<TAG_OR_BRANCH>` to the URL. Private repositories
-require Git credentials that can already access the repository.
 
 ## Generate a Codex Skill
 
@@ -64,7 +57,7 @@ Run the command from the root of the project where Codex should discover the
 Skill:
 
 ```powershell
-mcp-to-skills generate blender --session
+uv run mcp-to-skills generate blender --session
 ```
 
 This starts `uvx blender-mcp` temporarily, obtains the Tool names and schemas
@@ -84,7 +77,7 @@ evaluation specification. If the MCP server is not launched as
 `uvx <name>-mcp`, pass an existing configuration:
 
 ```powershell
-mcp-to-skills generate blender --session --config C:\path\to\blender-mcp.yaml
+uv run mcp-to-skills generate blender --session --config C:\path\to\blender-mcp.yaml
 ```
 
 Alternatively use `--command` and repeat `--arg`. `--no-inspect` creates the
@@ -112,7 +105,8 @@ Optional lifecycle settings are `initialize_timeout` (30 seconds),
 `discovery_timeout` (1.5 seconds), and `call_timeout` (120 seconds).
 `idle_timeout: 0` disables idle expiry.
 
-For `session start blender`, configuration is searched in this order:
+For `uv run mcp-to-skills session start blender`, configuration is searched in
+this order:
 
 1. A path passed with `--config`.
 2. `./mcp.yaml`.
@@ -125,13 +119,13 @@ For `session start blender`, configuration is searched in this order:
 ## Session commands
 
 ```powershell
-mcp-to-skills session start blender
-mcp-to-skills session status blender
-mcp-to-skills session list
-mcp-to-skills session call blender get_scene_info
-mcp-to-skills session call blender execute_blender_code --json '{"code":"..."}'
-mcp-to-skills session stop blender
-mcp-to-skills session stop --all
+uv run mcp-to-skills session start blender
+uv run mcp-to-skills session status blender
+uv run mcp-to-skills session list
+uv run mcp-to-skills session call blender get_scene_info
+uv run mcp-to-skills session call blender execute_blender_code --json '{"code":"..."}'
+uv run mcp-to-skills session stop blender
+uv run mcp-to-skills session stop --all
 ```
 
 Starting the same named server twice reuses its existing process. The idle

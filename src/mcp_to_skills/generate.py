@@ -124,7 +124,7 @@ def _single_line(value: Any) -> str:
 def _description(server: str, tools: Sequence[Dict[str, Any]]) -> str:
     names = [_single_line(tool["name"])[:100] for tool in tools[:5]]
     suffix = ", including " + ", ".join(names) if names else ""
-    return "Use the %s MCP server through mcp-to-skills for its exposed operations%s." % (
+    return "Use the %s MCP server through the project's mcp-to-skills dependency for its exposed operations%s." % (
         server,
         suffix,
     )
@@ -140,8 +140,9 @@ def render_skill(server: str, mode: str, tools: Sequence[Dict[str, Any]], inspec
         "",
         "# %s MCP" % server,
         "",
-        "Use `mcp-to-skills` to call this MCP server. Before choosing a tool or building",
-        "arguments, read [the generated tool reference](references/tools.md).",
+        "Use `uv run mcp-to-skills` from this project to call the MCP server. Before",
+        "choosing a tool or building arguments, read",
+        "[the generated tool reference](references/tools.md).",
         "",
     ]
     if mode == "session":
@@ -149,11 +150,11 @@ def render_skill(server: str, mode: str, tools: Sequence[Dict[str, Any]], inspec
             (
                 "## Session workflow",
                 "",
-                "1. Run `mcp-to-skills session status %s`." % server,
-                "2. If it is off, run `mcp-to-skills session start %s`." % server,
-                "3. Call tools with `mcp-to-skills session call %s <tool> --json '<object>'`." % server,
+                "1. Run `uv run mcp-to-skills session status %s`." % server,
+                "2. If it is off, run `uv run mcp-to-skills session start %s`." % server,
+                "3. Call tools with `uv run mcp-to-skills session call %s <tool> --json '<object>'`." % server,
                 "4. Keep the session running between related calls; do not stop it after each call.",
-                "5. When the related work is complete, run `mcp-to-skills session stop %s`." % server,
+                "5. When the related work is complete, run `uv run mcp-to-skills session stop %s`." % server,
             )
         )
     else:
@@ -161,9 +162,9 @@ def render_skill(server: str, mode: str, tools: Sequence[Dict[str, Any]], inspec
             (
                 "## On-demand workflow",
                 "",
-                "1. Immediately before an operation, run `mcp-to-skills session start %s`." % server,
-                "2. Call the required tool with `mcp-to-skills session call %s <tool> --json '<object>'`." % server,
-                "3. Immediately after the operation, run `mcp-to-skills session stop %s`." % server,
+                "1. Immediately before an operation, run `uv run mcp-to-skills session start %s`." % server,
+                "2. Call the required tool with `uv run mcp-to-skills session call %s <tool> --json '<object>'`." % server,
+                "3. Immediately after the operation, run `uv run mcp-to-skills session stop %s`." % server,
             )
         )
     if not inspected:
@@ -184,7 +185,7 @@ def render_tools_reference(server: str, tools: Sequence[Dict[str, Any]], inspect
         "Call a listed tool with:",
         "",
         "```text",
-        "mcp-to-skills session call %s <tool> --json '<object>'" % server,
+        "uv run mcp-to-skills session call %s <tool> --json '<object>'" % server,
         "```",
         "",
     ]

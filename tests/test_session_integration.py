@@ -27,7 +27,18 @@ class SessionIntegrationTests(unittest.TestCase):
         deadline = time.monotonic() + 3
         while (self.runtime / "broker.json").exists() and time.monotonic() < deadline:
             time.sleep(0.05)
-        self.temporary.cleanup()
+        # On Windows the detached broker can remove its state file just before
+        # the OS releases the inherited broker.log handle. Retry that short
+        # shutdown window so teardown does not make successful tests flaky.
+        cleanup_deadline = time.monotonic() + 3
+        while True:
+            try:
+                self.temporary.cleanup()
+                break
+            except PermissionError:
+                if time.monotonic() >= cleanup_deadline:
+                    raise
+                time.sleep(0.05)
 
     def config(self, name="demo", idle_timeout=30, modern=False):
         path = self.directory / (name + ".yaml")
