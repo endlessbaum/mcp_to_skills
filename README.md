@@ -52,7 +52,7 @@ uv run mcp-to-skills session list
 Install directly from a public GitHub repository in the same way:
 
 ```powershell
-uv tool install "git+https://github.com/<OWNER>/mcp-to-skills.git"
+uv tool install "git+https://github.com/endlessbaum/mcp_to_skills.git"
 ```
 
 For a tag or branch, append `@<TAG_OR_BRANCH>` to the URL. Private repositories
