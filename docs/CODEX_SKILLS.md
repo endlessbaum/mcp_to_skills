@@ -23,33 +23,31 @@ Codexは、現在の作業ディレクトリからGitリポジトリのルート
 `SKILL.md`はCodexがSkillを発見・選択するためのファイルで、`mcp.yaml`は
 `mcp-to-skills`がstdio MCP Serverを起動するためのファイルである。
 
-## 1. uvでmcp-to-skillsをインストールする
+## 1. 対象プロジェクトへuvで追加する
 
-Session BrokerはCLIプロセス終了後も動作するため、永続的な隔離環境を作る
-`uv tool install`を使用する。
-
-```powershell
-uv tool install D:\mcp_to_skills
-mcp-to-skills --version
-```
-
-uvからPATHに関する警告が出た場合:
+`mcp-to-skills`をOS全体へインストールする必要はない。対象プロジェクトの
+dev依存関係として追加し、プロジェクトの永続的な`.venv`から実行する。
 
 ```powershell
-uv tool update-shell
+cd <REPO_ROOT>
+uv init --bare  # pyproject.tomlがない場合だけ実行
+uv add --dev "mcp-to-skills @ git+https://github.com/endlessbaum/mcp_to_skills.git"
+uv run mcp-to-skills --version
 ```
 
-その後、PowerShellとCodexを再起動する。Skill内では`mcp-to-skills`コマンドを
-使用する。
+`uv add`により`pyproject.toml`と`uv.lock`が更新され、実体はプロジェクト内の
+`.venv`へインストールされる。グローバルPATHの設定やPowerShell、Codexの
+再起動は不要である。Skill内でも必ず`uv run mcp-to-skills`を使用する。
 
-ソース変更を即時反映する開発環境ではeditable installを使用できる。
+GitHub版を更新する場合:
 
 ```powershell
-uv tool install --editable D:\mcp_to_skills
+uv lock --upgrade-package mcp-to-skills
+uv sync
 ```
 
-`uvx`は一時的なTool環境向けである。CLI終了後もBrokerが残るSession Modeの
-標準実行方法には使用しない。
+`mcp.yaml`内の`uvx`はMCP Server自体を起動するための指定であり、
+`mcp-to-skills`のインストール方式とは別である。
 
 ## 2. プロジェクトSkillを配置する
 
@@ -64,7 +62,7 @@ Blenderの場合:
 
 ```powershell
 cd <REPO_ROOT>
-mcp-to-skills generate blender --session
+uv run mcp-to-skills generate blender --session
 ```
 
 このコマンドは既定で`uvx blender-mcp`を検査用に一時起動し、MCPの
@@ -74,7 +72,7 @@ mcp-to-skills generate blender --session
 MCP Serverの起動方法が既定と異なる場合は、既存の設定を指定する。
 
 ```powershell
-mcp-to-skills generate blender --session --config C:\path\to\mcp.yaml
+uv run mcp-to-skills generate blender --session --config C:\path\to\mcp.yaml
 ```
 
 または`--command`と繰り返し指定できる`--arg`を使う。MCPを起動できない状態で
@@ -95,7 +93,7 @@ mcp.yaml:  name: blender
 自動的に見つかる。
 
 ```powershell
-mcp-to-skills session start blender
+uv run mcp-to-skills session start blender
 ```
 
 ## 3. 生成されたSKILL.mdを確認する
@@ -112,13 +110,13 @@ description: Blender MCPを使って3Dシーン、メッシュ、マテリアル
 
 # Blender Session
 
-Blender操作にはmcp-to-skillsのSession Modeを使用する。
+Blender操作にはプロジェクト環境のmcp-to-skills Session Modeを使用する。
 
-1. `mcp-to-skills session status blender`で状態を確認する。
-2. OFFなら`mcp-to-skills session start blender`を実行する。
-3. `mcp-to-skills session call blender <tool> [--json '<object>']`で必要な操作を続ける。
+1. `uv run mcp-to-skills session status blender`で状態を確認する。
+2. OFFなら`uv run mcp-to-skills session start blender`を実行する。
+3. `uv run mcp-to-skills session call blender <tool> [--json '<object>']`で必要な操作を続ける。
 4. Tool callごとには停止しない。
-5. 一連のBlender作業が完了したら`mcp-to-skills session stop blender`を実行する。
+5. 一連のBlender作業が完了したら`uv run mcp-to-skills session stop blender`を実行する。
 ```
 
 `generate`はTool名、用途、引数スキーマを`references/tools.md`へ分離し、
