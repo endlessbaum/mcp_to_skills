@@ -1,0 +1,9 @@
+name: blender
+transport: stdio
+command: uvx
+args:
+  - blender-mcp
+lifecycle:
+  mode: session
+  idle_timeout: 600
+
